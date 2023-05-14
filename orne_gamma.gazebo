@@ -1,0 +1,278 @@
+<?xml version="1.0"?>
+<robot>
+  <!-- <xacro:arg name="laser_visual"  default="false"/>
+  <xacro:arg name="camera_visual" default="false"/>
+  <xacro:arg name="imu_visual"    default="false"/> -->
+  <!-- ros_control plugin -->
+  <!-- <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotSimType>icart_mini_gazebo/ICartMiniHWSim</robotSimType> 
+          <robotNamespace>orne_gamma</robotNamespace>
+      <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+    </plugin>
+  </gazebo> -->
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_diff_drive.so">
+      <robotNamespace>orne_gamma</robotNamespace>
+      <commandTopic>/cmd_vel</commandTopic>
+      <odometryTopic>/odom</odometryTopic>
+      <odometryFrame>odom</odometryFrame>
+      <odometrySource>world</odometrySource>
+      <publishOdomTF>true</publishOdomTF>
+      <robotBaseFrame>base_footprint</robotBaseFrame>
+      <publishWheelTF>true</publishWheelTF>
+      <publishTf>true</publishTf>
+      <publishWheelJointState>true</publishWheelJointState> <!--true-->
+      <legacyMode>false</legacyMode>
+      <updateRate>30</updateRate>
+      <leftJoint>left_wheel_joint</leftJoint>
+      <rightJoint>right_wheel_joint</rightJoint>
+      <wheelSeparation>0.3</wheelSeparation>
+      <!-- wheel separation 0.4615 -->
+      <wheelDiameter>0.145</wheelDiameter>
+      <wheelAcceleration>1</wheelAcceleration>
+      <wheelTorque>10</wheelTorque>
+      <rosDebugLevel>na</rosDebugLevel>
+    </plugin>
+  </gazebo>
+
+  <!-- Base Link -->
+  <gazebo reference="base_link">
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+  <!-- Left Wheel -->
+  <gazebo reference="left_wheel">
+    <!-- <mu1>2.5</mu1>
+    <mu2>2.5</mu2> -->
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <kp>1000000.0</kp>
+    <kd>100.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>1.0</maxVel>
+
+    <material>Gazebo/Orange</material>
+  </gazebo>
+
+  <!-- Right Wheel -->
+  <gazebo reference="right_wheel">
+    <!-- <mu1>2.5</mu1>
+    <mu2>2.5</mu2> -->
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <kp>1000000.0</kp>
+    <kd>100.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>1.0</maxVel>
+
+    <material>Gazebo/Orange</material>
+  </gazebo>
+  
+  <!--gazebo reference="caster">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <kp>1000000.0</kp>
+    <kd>100.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>1.0</maxVel>
+
+    <material>Gazebo/Orange</material>
+  </gazebo-->
+  <!-- hokuyo -->
+  <gazebo reference="hokuyo_link">
+    <!-- <sensor type="ray" name="head_hokuyo_sensor"> -->
+    <sensor type="gpu_ray" name="head_hokuyo_sensor">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>false</visualize>
+      <update_rate>40</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>720</samples>
+            <resolution>1</resolution>
+            <min_angle>-1.570796</min_angle>
+            <max_angle>1.570796</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.10</min>
+          <max>30.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <!-- Noise parameters based on published spec for Hokuyo laser
+               achieving "+-30mm" accuracy at range < 10m.  A mean of 0.0m and
+               stddev of 0.01m will put 99.7% of samples within 0.03m of the true
+               reading. -->
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </ray>
+      <!-- <plugin name="gazebo_ros_head_hokuyo_controller" filename="libgazebo_ros_laser.so"> -->
+      <plugin name="gazebo_ros_head_hokuyo_controller" filename="libgazebo_ros_gpu_laser.so">
+        <topicName>/scan</topicName>
+        <frameName>hokuyo_link</frameName>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+
+<!--link : https://www.raspberrypi.org/documentation/hardware/camera/-->
+  <gazebo reference="camera_rgb_left_frame">
+    <sensor type="camera" name="camera_left">
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <camera>
+          <!-- <horizontal_fov>2.09</horizontal_fov> -->
+          <horizontal_fov>1.047</horizontal_fov>
+          <image>
+              <width>640</width>
+              <height>480</height>
+              <format>R8G8B8</format>
+          </image>
+          <clip>
+              <near>0.03</near>
+              <far>100</far>
+          </clip>
+      </camera>
+      <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+    <topicName>camera_left</topicName>
+    <alwaysOn>true</alwaysOn>
+        <updateRate>30.0</updateRate>
+        <cameraName>camera_left</cameraName>
+        <frameName>camera_rgb_optical_left_frame</frameName>
+        <imageTopicName>rgb/image_raw</imageTopicName>
+        <cameraInfoTopicName>rgb/camera_info</cameraInfoTopicName>
+        <hackBaseline>0.07</hackBaseline>
+        <distortionK1>0.0</distortionK1>
+        <distortionK2>0.0</distortionK2>
+        <distortionK3>0.0</distortionK3>
+        <distortionT1>0.0</distortionT1>
+        <distortionT2>0.0</distortionT2>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+<!--link : https://www.raspberrypi.org/documentation/hardware/camera/-->
+  <gazebo reference="camera_rgb_frame">
+    <sensor type="camera" name="camera">
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <camera>
+          <!-- <horizontal_fov>2.09</horizontal_fov> -->
+          <horizontal_fov>1.047</horizontal_fov>
+          <image>
+              <width>640</width>
+              <height>480</height>
+              <format>R8G8B8</format>
+          </image>
+          <clip>
+              <near>0.03</near>
+              <far>100</far>
+          </clip>
+      </camera>
+      <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>30.0</updateRate>
+        <cameraName>camera</cameraName>
+        <frameName>camera_rgb_optical_frame</frameName>
+        <imageTopicName>rgb/image_raw</imageTopicName>
+        <cameraInfoTopicName>rgb/camera_info</cameraInfoTopicName>
+        <hackBaseline>0.07</hackBaseline>
+        <distortionK1>0.0</distortionK1>
+        <distortionK2>0.0</distortionK2>
+        <distortionK3>0.0</distortionK3>
+        <distortionT1>0.0</distortionT1>
+        <distortionT2>0.0</distortionT2>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+<!--link : https://www.raspberrypi.org/documentation/hardware/camera/-->
+  <gazebo reference="camera_rgb_right_frame">
+    <sensor type="camera" name="camera_right">
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <camera>
+          <!-- <horizontal_fov>2.09</horizontal_fov> -->
+          <horizontal_fov>1.047</horizontal_fov>
+          <image>
+              <width>640</width>
+              <height>480</height>
+              <format>R8G8B8</format>
+          </image>
+          <clip>
+              <near>0.03</near>
+              <far>100</far>
+          </clip>
+      </camera>
+      <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+        <topicName>camera_right</topicName>
+        <alwaysOn>true</alwaysOn>
+        <updateRate>30.0</updateRate>
+        <cameraName>camera_right</cameraName>
+        <frameName>camera_rgb_optical_right_frame</frameName>
+        <imageTopicName>rgb/image_raw</imageTopicName>
+        <cameraInfoTopicName>rgb/camera_info</cameraInfoTopicName>
+        <hackBaseline>0.07</hackBaseline>
+        <distortionK1>0.0</distortionK1>
+        <distortionK2>0.0</distortionK2>
+        <distortionK3>0.0</distortionK3>
+        <distortionT1>0.0</distortionT1>
+        <distortionT2>0.0</distortionT2>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+
+
+<!--link : https://www.raspberrypi.org/documentation/hardware/camera/-->
+  <gazebo reference="camera_rgb_under_frame">
+    <sensor type="camera" name="camera_under">
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <camera>
+          <!-- <horizontal_fov>2.09</horizontal_fov> -->
+          <horizontal_fov>1.047</horizontal_fov>
+          <image>
+              <width>640</width>
+              <height>480</height>
+              <format>R8G8B8</format>
+          </image>
+          <clip>
+              <near>0.03</near>
+              <far>100</far>
+          </clip>
+      </camera>
+      <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+        <topicName>camera_under</topicName>
+        <alwaysOn>true</alwaysOn>
+        <updateRate>30.0</updateRate>
+        <cameraName>camera_under</cameraName>
+        <frameName>camera_rgb_optical_under_frame</frameName>
+        <imageTopicName>rgb/image_raw</imageTopicName>
+        <cameraInfoTopicName>rgb/camera_info</cameraInfoTopicName>
+        <hackBaseline>0.07</hackBaseline>
+        <distortionK1>0.0</distortionK1>
+        <distortionK2>0.0</distortionK2>
+        <distortionK3>0.0</distortionK3>
+        <distortionT1>0.0</distortionT1>
+        <distortionT2>0.0</distortionT2>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+
+  <gazebo>
+    <plugin name="ground_truth" filename="libgazebo_ros_p3d.so">
+      <frameName>world</frameName>
+      <bodyName>base_link</bodyName>
+      <topicName>/tracker</topicName>
+      <updateRate>10.0</updateRate>
+    </plugin>
+  </gazebo>
+
+
+</robot>
